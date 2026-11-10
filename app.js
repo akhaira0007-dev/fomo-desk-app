@@ -631,6 +631,7 @@
       }
       bind();
       startPoll();
+      applyDeepLink();
       return;
     }
 
@@ -644,9 +645,20 @@
     $('app').classList.remove('hidden');
     bind();
     startPoll();
+    applyDeepLink();
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
+  }
+
+  function applyDeepLink() {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab && ['home','agents','activity','account'].includes(tab)) setTab(tab);
+    const screen = params.get('screen');
+    const mint = params.get('mint');
+    if (screen === 'coin' && mint) setTimeout(() => openCoin(mint), 1200);
+    if (screen === 'auditor' && mint) setTimeout(() => openAuditor(mint), 1200);
   }
 
   boot();
