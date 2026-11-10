@@ -19,6 +19,9 @@
       {key:'scanner.min_pool_age_min', name:'min_pool_age_min', alias:'scanner.min_pool_age_min'},
       {key:'scanner.max_wait_min', name:'max_wait_min', alias:'max_wait_min'},
       {key:'scanner.runner_h24_pct', name:'runner_h24_pct', alias:'runner_h24_pct'},
+      {key:'scanner.dex_discovery_enabled', name:'dex_discovery_enabled', alias:'dex_discovery'},
+      {key:'scanner.dex_discovery_poll_s', name:'dex_discovery_poll_s', alias:'dex_discovery_poll_s'},
+      {key:'scanner.dex_discovery_max_pair_age_h', name:'dex_discovery_max_pair_age_h', alias:'dex_discovery_max_pair_age_h'},
     ],
     auditor: [
       {key:'auditor.enabled', name:'enabled', alias:'auditor enabled'},
@@ -304,7 +307,8 @@
       const killed = d.verdict === 'kill' || d.verdict === 'reject' || d.verdict === 'drop';
       const name = d.coin || (d.mint ? d.mint.slice(0, 6) : '—');
       const reason = d.reason || (killed ? 'killed' : '');
-      return `<div class="feed-row"><span class="coin ${killed ? 'killed' : ''}">${escapeHtml(name)}</span>
+      const dex = (d.source && String(d.source).startsWith('dex')) ? '<span class="tag-dex">Dex</span>' : '';
+      return `<div class="feed-row"><span class="coin ${killed ? 'killed' : ''}">${escapeHtml(name)}${dex}</span>
         <span class="${killed ? 'reason' : 'pass'}">${killed ? escapeHtml(reason) : '→ auditor'}</span></div>`;
     }).join('');
   }

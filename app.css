@@ -418,3 +418,9 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
   .beam, .disc { transition: none !important; }
   .sheet { transition: none !important; }
 }
+
+.tag-dex {
+  display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 4px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.02em;
+  color: var(--tertiary); background: var(--card2); vertical-align: 1px;
+}
