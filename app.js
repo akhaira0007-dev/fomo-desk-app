@@ -616,7 +616,8 @@
       const key = row.dataset.key;
       const alias = SETTING_ALIAS[key] || key;
       const s = (state.data.settings && state.data.settings.settings) || {};
-      showCmd(`set ${alias} to ${s[key]}`);
+      if (key === 'stop_pct') showCmd(`set stop to -${s[key]}%`);
+      else showCmd(`set ${alias} to ${s[key]}`);
     });
     $('btnSearch').addEventListener('click', () => {
       const q = prompt('Search name, symbol or mint');
