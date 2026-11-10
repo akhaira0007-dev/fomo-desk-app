@@ -77,6 +77,14 @@
     return r.json();
   }
 
+  function setError(msg) {
+    qsa('[data-error-banner]').forEach(el => {
+      if (msg) { el.textContent = msg; el.classList.remove('hidden'); }
+      else { el.textContent = ''; el.classList.add('hidden'); }
+    });
+  }
+  function clearError() { setError(null); }
+
   function toast(msg) {
     const t = $('toast');
     t.textContent = msg;
@@ -189,19 +197,39 @@
     drawHomeChart();
   }
 
+  function cardMetrics(name, a) {
+    const dec = (state.data.decisions[name] || {}).decisions || [];
+    if (name === 'scanner') {
+      const n = dec.length;
+      return n ? `${n} pool${n === 1 ? '' : 's'}` : 'Listening';
+    }
+    if (name === 'auditor') {
+      const info = (a && a.info) || '';
+      const m = info.match(/(\d+)\s+taken/);
+      return m ? `${m[1]} taken apart` : (dec.length ? `${dec.length} taken apart` : 'Idle');
+    }
+    if (name === 'analyst') return 'Scoring';
+    if (name === 'executor') {
+      const m = ((a && a.info) || '').match(/(\d+)\s+trades/);
+      return m ? `${m[1]} trades` : '0 trades';
+    }
+    if (name === 'risk') return 'Guarding';
+    return '';
+  }
+
   function renderCarousel(agents) {
     const root = $('agentCarousel');
     const by = Object.fromEntries((agents || []).map(a => [a.name, a]));
-    const w = Math.max(280, window.innerWidth - 32);
+    const w = Math.max(1, window.innerWidth - 32);
     const radius = 42 * w / 504;
     root.innerHTML = AGENT_ORDER.map(name => {
       const a = by[name] || { name, label: name, info: '', status: 'stopped', color: '#fff' };
-      return `<article class="agent-card" data-agent="${name}" style="border-radius:${radius}px;flex-basis:${w}px">
+      const count = cardMetrics(name, a);
+      return `<article class="agent-card" data-agent="${name}" style="width:${w}px;max-width:${w}px;border-radius:${radius}px">
         <div class="ac-top"><div class="ac-name" style="color:${a.color || '#fff'}">${a.label || name}</div>
-        <div class="ac-count">${escapeHtml(a.info || a.status || '')}</div></div>
+        <div class="ac-count">${escapeHtml(count)}</div></div>
         <div class="ac-body" id="card-${name}"></div></article>`;
     }).join('');
-    // fill bodies from decisions / info
     fillScannerCard(by.scanner);
     fillAuditorCard(by.auditor);
     fillAnalystCard(by.analyst);
@@ -216,10 +244,12 @@
       el.innerHTML = '<div style="color:var(--tertiary)">Listening for graduations</div>';
       return;
     }
-    el.innerHTML = dec.slice(0, 6).map(d => {
-      const killed = d.verdict === 'kill' || d.verdict === 'reject';
-      return `<div class="feed-row"><span class="${killed ? 'killed' : ''}">${escapeHtml(d.coin || d.mint.slice(0,6))}</span>
-        <span class="${killed ? 'reason' : 'pass'}">${killed ? escapeHtml(d.reason || '') : '→ auditor'}</span></div>`;
+    el.innerHTML = dec.slice(0, 8).map(d => {
+      const killed = d.verdict === 'kill' || d.verdict === 'reject' || d.verdict === 'drop';
+      const name = d.coin || (d.mint ? d.mint.slice(0, 6) : '—');
+      const reason = d.reason || (killed ? 'killed' : '');
+      return `<div class="feed-row"><span class="coin ${killed ? 'killed' : ''}">${escapeHtml(name)}</span>
+        <span class="${killed ? 'reason' : 'pass'}">${killed ? escapeHtml(reason) : '→ auditor'}</span></div>`;
     }).join('');
   }
   function fillAuditorCard(a) {
@@ -257,8 +287,9 @@
     const points = (ch && ch.points) || [];
     const marks = (ch && ch.marks) || [];
     const hasTrade = marks.some(m => m.kind === 'bought' || m.kind === 'sold' || m.kind === 'stopped');
-    empty.classList.toggle('hidden', points.length > 1 || hasTrade);
-    DeskCharts.drawLineChart(canvas, points, marks, ch && ch.start_value);
+    // Spec empty: dashed start line + "Waiting for the first trade" until a trade mark exists
+    empty.classList.toggle('hidden', hasTrade);
+    DeskCharts.drawLineChart(canvas, points, marks, ch && ch.start_value, { waiting: !hasTrade });
   }
 
   function renderActivityList(root, rows, compact) {
@@ -481,7 +512,7 @@
       await Promise.all(tasks);
       state.lastOk = Date.now();
       state.failStreak = 0;
-      $('errorBanner').classList.add('hidden');
+      clearError();
       $('homeLoading').classList.add('hidden');
       $('homeBody').classList.remove('hidden');
       renderHome();
@@ -493,11 +524,11 @@
     } catch (e) {
       state.failStreak++;
       state.retryIn = Math.min(30, 5 * state.failStreak);
-      const last = state.lastOk ? new Date(state.lastOk).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—';
-      const b = $('errorBanner');
-      b.textContent = `Desk offline · retrying in ${state.retryIn}s · last update ${last}`;
-      b.classList.remove('hidden');
-      // keep last good numbers — do not clear
+      const lastStr = state.lastOk
+        ? new Date(state.lastOk).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        : '—';
+      setError(`Desk offline · retrying in ${state.retryIn}s · last update ${lastStr}`);
+      // keep last good numbers on every card/screen — do not re-render
     }
   }
 
@@ -621,17 +652,27 @@
     state.mock = params.get('mock'); // empty | loading | error | (absent = live)
     // For screenshots of empty/error without a path
     if (state.mock === 'empty' || state.mock === 'loading' || state.mock === 'error') {
-      state.path = 'fixture';
       $('gate').classList.add('hidden');
       $('app').classList.remove('hidden');
-      if (state.mock === 'error') {
-        state.data.state = { balance: 1000, today_pct: 0, multiplier: 1, mode: 'PAPER', paper_badge: true, agents: AGENT_ORDER.map(n => ({ name: n, label: cap(n), status: 'running', info: '', color: '#fff' })) };
-        state.data.chart = { range: 'LIVE', points: [{ ts: Date.now()/1000 - 60, value: 1000 }, { ts: Date.now()/1000, value: 1000 }], marks: [], start_value: 1000 };
-        state.data.activity = { rows: [], next_before: null, page_size: 30 };
-        state.lastOk = Date.now() - 60000;
-        renderHome(); renderActivity(); renderAgentsTab(); renderAccount();
-      }
       bind();
+      if (state.mock === 'error') {
+        // Spec: keep last good numbers. Load live (or fixtures) once, THEN go offline.
+        const path = initPath();
+        state.path = path || 'fixture';
+        const offline = 'error';
+        state.mock = path ? null : 'empty'; // fetch live or empty fixtures as "last good"
+        pollOnce().then(() => {
+          state.mock = offline;
+          state.lastOk = state.lastOk || Date.now();
+          // Re-render once with the good data, then freeze updates via mock=error throws
+          renderHome(); renderActivity(); renderAgentsTab(); renderAccount();
+          setError(`Desk offline · retrying in 5s · last update ${new Date(state.lastOk).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`);
+          startPoll(); // subsequent polls throw, banner updates, data stays
+          applyDeepLink();
+        });
+        return;
+      }
+      state.path = 'fixture';
       startPoll();
       applyDeepLink();
       return;

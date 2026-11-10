@@ -76,8 +76,9 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 }
 .nav-btn .dot.on { display: block; }
 .error-banner {
-  margin: 0 var(--gutter) 8px; padding: 10px 12px; border-radius: 10px;
+  margin: 6px var(--gutter) 8px; padding: 10px 12px; border-radius: 10px;
   background: rgba(255,69,58,0.12); color: var(--red); font-size: 13px;
+  line-height: 1.3;
 }
 
 /* ---- tabs ---- */
@@ -153,31 +154,48 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .chart-wrap canvas { width: 100%; height: 100%; display: block; }
 .chart-empty {
   position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center;
-  padding-bottom: 28px; color: var(--tertiary); font-size: 13px; pointer-events: none;
+  padding-bottom: 28px; color: var(--secondary); font-size: 13px; pointer-events: none; z-index: 1;
 }
 
 /* ---- agent carousel ---- */
 .carousel {
   display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
-  padding: 0 var(--gutter) 8px; -webkit-overflow-scrolling: touch;
+  padding: 0 16px 8px; -webkit-overflow-scrolling: touch;
+  scroll-padding-left: 16px;
 }
 .carousel::-webkit-scrollbar { display: none; }
 .agent-card {
-  flex: 0 0 calc(100vw - 32px); scroll-snap-align: start;
+  flex: 0 0 auto; width: calc(100vw - 32px); max-width: calc(100vw - 32px);
+  scroll-snap-align: start; scroll-snap-stop: always;
   background: var(--card); aspect-ratio: 504 / 470;
-  border-radius: calc(42 * (100vw - 32px) / 504); /* approx; JS sets exact */
-  padding: 18px 18px 14px; display: flex; flex-direction: column; gap: 8px;
-  overflow: hidden;
+  border-radius: calc((100vw - 32px) * 42 / 504);
+  padding: 16px; display: flex; flex-direction: column; gap: 8px;
+  overflow: hidden; box-sizing: border-box;
 }
-.agent-card .ac-top { display: flex; justify-content: space-between; align-items: center; }
-.agent-card .ac-name { font-size: 17px; font-weight: 600; }
-.agent-card .ac-count { color: var(--secondary); font-size: 13px; }
-.agent-card .ac-body { flex: 1; font-size: 14px; color: var(--secondary); overflow: hidden; }
-.agent-card .feed-row { display: flex; gap: 8px; align-items: baseline; padding: 3px 0;
-  border-bottom: 0.5px solid var(--sep); font-size: 13px; }
-.agent-card .feed-row .killed { color: var(--tertiary); text-decoration: line-through; }
-.agent-card .feed-row .reason { color: var(--red); margin-left: auto; font-size: 12px; }
-.agent-card .feed-row .pass { color: var(--cyan); margin-left: auto; }
+.agent-card .ac-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.agent-card .ac-name { font-size: 17px; font-weight: 600; flex-shrink: 0; }
+.agent-card .ac-count {
+  color: var(--secondary); font-size: 13px; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.agent-card .ac-body { flex: 1; font-size: 14px; color: var(--secondary); overflow: hidden; min-height: 0; }
+.agent-card .feed-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: baseline;
+  padding: 4px 0; border-bottom: 0.5px solid var(--sep); font-size: 13px;
+}
+.agent-card .feed-row .coin {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+}
+.agent-card .feed-row .killed {
+  color: var(--tertiary);
+  text-decoration: line-through;
+  text-decoration-color: var(--red);
+  text-decoration-thickness: 1.5px;
+}
+.agent-card .feed-row .reason {
+  color: var(--red); font-size: 12px; white-space: nowrap; flex-shrink: 0;
+}
+.agent-card .feed-row .pass { color: var(--cyan); white-space: nowrap; }
 .layer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .layer-strip {
   height: 10px; border-radius: 4px; background: var(--card2);

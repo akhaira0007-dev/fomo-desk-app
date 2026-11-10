@@ -21,8 +21,6 @@
   </div>
 
   <div id="app" class="hidden">
-    <div id="errorBanner" class="error-banner hidden"></div>
-
     <!-- HOME -->
     <section id="screen-home" class="screen active">
       <div class="navbar">
@@ -36,6 +34,7 @@
           <i class="dot" id="bellDot"></i>
         </button>
       </div>
+      <div class="error-banner hidden" data-error-banner></div>
       <div id="homeLoading" class="screen-pad hidden">
         <div class="skel" style="height:72px;margin:8px 0"></div>
         <div class="skel" style="height:180px;margin:8px 0"></div>
@@ -72,12 +71,14 @@
     <!-- AGENTS -->
     <section id="screen-agents" class="screen">
       <div class="navbar"><div class="nav-title">Agents</div></div>
+      <div class="error-banner hidden" data-error-banner></div>
       <div id="agentsList"></div>
     </section>
 
     <!-- ACTIVITY -->
     <section id="screen-activity" class="screen">
       <div class="navbar"><div class="nav-title">Activity</div></div>
+      <div class="error-banner hidden" data-error-banner></div>
       <div class="list" id="activityList"></div>
       <div class="empty hidden" id="activityEmpty">Nothing yet tonight</div>
     </section>
@@ -85,6 +86,7 @@
     <!-- ACCOUNT -->
     <section id="screen-account" class="screen">
       <div class="navbar"><div class="nav-title">Account</div></div>
+      <div class="error-banner hidden" data-error-banner></div>
       <div class="card-block">
         <div class="mode-switch">
           <button id="modePaper" class="on">PAPER</button>

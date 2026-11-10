@@ -30,12 +30,12 @@
     const iw = w - pad.l - pad.r;
     const ih = h - pad.t - pad.b;
 
-    // empty: dashed start line + label handled in DOM
+    // empty / waiting: dashed start line (label in DOM)
     if (!points || points.length === 0) {
       const y = pad.t + ih * 0.55;
-      ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = TERT;
-      ctx.lineWidth = 1;
+      ctx.setLineDash([6, 5]);
+      ctx.strokeStyle = 'rgba(235,235,245,0.45)';
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(pad.l, y);
       ctx.lineTo(pad.l + iw, y);
@@ -73,19 +73,6 @@
     ctx.fillStyle = g;
     ctx.fill();
 
-    // dashed start value
-    if (startValue != null) {
-      const y = Y(startValue);
-      ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = TERT;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(pad.l, y);
-      ctx.lineTo(pad.l + iw, y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-
     // line
     ctx.beginPath();
     points.forEach((p, i) => {
@@ -96,6 +83,19 @@
     ctx.lineWidth = 2;
     ctx.lineJoin = 'round';
     ctx.stroke();
+
+    // dashed start value ON TOP so it stays visible even when flat
+    if (startValue != null) {
+      const y = Y(startValue);
+      ctx.setLineDash([6, 5]);
+      ctx.strokeStyle = 'rgba(235,235,245,0.55)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(pad.l, y);
+      ctx.lineTo(pad.l + iw, y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
 
     // marks — never overlap: stack upward
     const placed = [];
