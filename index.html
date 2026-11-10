@@ -1,2 +1,201 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FOMO Desk</title></head>
-<body style="background:#0b0b0f;color:#eee;font-family:-apple-system,sans-serif;padding:24px"><h1>FOMO Desk</h1><p>Hosting check. The app arrives in step 8.</p></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#000000">
+  <title>Grok Bot</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <div id="gate" class="hidden">
+    <div>
+      <h1>Open from Telegram</h1>
+      <p>This app needs your private desk link (the one with <span class="mono">#d=…</span>). Open it once from Telegram, or ask Grok Bot for it.</p>
+      <a class="btn" href="https://t.me/Khaira_desk_bot" target="_blank" rel="noopener">Open Telegram</a>
+    </div>
+  </div>
+
+  <div id="app" class="hidden">
+    <div id="errorBanner" class="error-banner hidden"></div>
+
+    <!-- HOME -->
+    <section id="screen-home" class="screen active">
+      <div class="navbar">
+        <button class="avatar" id="btnAvatar" aria-label="Account"><span>G</span></button>
+        <div class="nav-title">Grok Bot <span class="chev">›</span></div>
+        <button class="nav-btn" id="btnSearch" aria-label="Search">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
+        </button>
+        <button class="nav-btn" id="btnBell" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 17h12l-1.5-2V10a4.5 4.5 0 10-9 0v5L6 17z"/><path d="M10 19a2 2 0 004 0"/></svg>
+          <i class="dot" id="bellDot"></i>
+        </button>
+      </div>
+      <div id="homeLoading" class="screen-pad hidden">
+        <div class="skel" style="height:72px;margin:8px 0"></div>
+        <div class="skel" style="height:180px;margin:8px 0"></div>
+        <div class="skel" style="height:200px;margin:8px 0"></div>
+      </div>
+      <div id="homeBody">
+        <div class="balance-block">
+          <div class="balance-row">
+            <div class="odometer" id="balanceOdo">$0.00</div>
+            <span class="paper-pill hidden" id="paperPill">PAPER</span>
+          </div>
+          <div class="today" id="todayPct">+0.00%</div>
+          <div style="margin-top:6px"><span class="mult-pill" id="multPill">1.00×</span></div>
+        </div>
+        <div class="ranges" id="ranges">
+          <button data-range="LIVE" class="on">LIVE</button>
+          <button data-range="1H">1H</button>
+          <button data-range="4H">4H</button>
+          <button data-range="1D">1D</button>
+          <button data-range="1W">1W</button>
+          <button data-range="ALL">ALL</button>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="homeChart"></canvas>
+          <div class="chart-empty hidden" id="chartEmpty">Waiting for the first trade</div>
+        </div>
+        <div class="section-h"><span id="agentsHeading">Agents · 0 running</span></div>
+        <div class="carousel" id="agentCarousel"></div>
+        <div class="section-h"><span>Activity</span><button class="link" data-tab="activity">See all</button></div>
+        <div class="list" id="homeActivity"></div>
+      </div>
+    </section>
+
+    <!-- AGENTS -->
+    <section id="screen-agents" class="screen">
+      <div class="navbar"><div class="nav-title">Agents</div></div>
+      <div id="agentsList"></div>
+    </section>
+
+    <!-- ACTIVITY -->
+    <section id="screen-activity" class="screen">
+      <div class="navbar"><div class="nav-title">Activity</div></div>
+      <div class="list" id="activityList"></div>
+      <div class="empty hidden" id="activityEmpty">Nothing yet tonight</div>
+    </section>
+
+    <!-- ACCOUNT -->
+    <section id="screen-account" class="screen">
+      <div class="navbar"><div class="nav-title">Account</div></div>
+      <div class="card-block">
+        <div class="mode-switch">
+          <button id="modePaper" class="on">PAPER</button>
+          <button id="modeLive">LIVE</button>
+        </div>
+        <div class="field-row">
+          <span>Stack</span>
+          <input id="stackField" type="number" inputmode="decimal" disabled>
+        </div>
+      </div>
+      <div class="card-block">
+        <a class="field-row" id="profileRow" href="#" target="_blank" rel="noopener">
+          <span>Your FOMO profile</span><span class="mono" id="profileHandle">—</span>
+        </a>
+        <button class="field-row" id="inviteRow" type="button">
+          <span>Invite a friend</span><span style="color:var(--blue)">Share</span>
+        </button>
+      </div>
+      <div class="card-block">
+        <div class="field-row"><span>Telegram</span><span id="tgStatus">—</span></div>
+        <button class="field-row" id="btnTestPush" type="button">
+          <span>Send test push</span><span style="color:var(--blue)">›</span>
+        </button>
+        <div class="field-row" id="webPushRow">
+          <span>Notifications</span><span style="color:var(--tertiary)">Telegram only</span>
+        </div>
+      </div>
+      <p class="hint" id="accountHint">Plan B: settings and mode changes go through Telegram. Tapping a control shows the command.</p>
+      <div id="settingsGroups"></div>
+    </section>
+
+    <nav class="tabbar" id="tabbar">
+      <button class="tab active" data-tab="home" aria-label="Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1h-5v-6H10v6H5a1 1 0 01-1-1v-9.5z"/></svg>
+        Home
+      </button>
+      <button class="tab" data-tab="agents" aria-label="Agents">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="8" r="3"/><circle cx="17" cy="8" r="3"/><path d="M2 19a5 5 0 0110 0M12 19a5 5 0 0110 0"/></svg>
+        Agents
+      </button>
+      <button class="tab" data-tab="activity" aria-label="Activity">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+        Activity
+      </button>
+      <button class="tab" data-tab="account" aria-label="Account">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20a8 8 0 0116 0"/></svg>
+        Account
+      </button>
+    </nav>
+  </div>
+
+  <!-- Auditor overlay -->
+  <div class="overlay" id="auditorScreen">
+    <button class="back" id="auditorBack">‹ Back</button>
+    <div class="screen-pad">
+      <div id="auditorEmpty" class="empty hidden">No coin taken apart yet</div>
+      <div id="auditorBody">
+        <div class="coin-head">
+          <div style="font-size:22px;font-weight:600" id="auditorName">—</div>
+        </div>
+        <div class="discs" id="auditorDiscs">
+          <div class="beam" id="auditBeam"></div>
+        </div>
+        <div class="layer-rows" id="auditorLayers"></div>
+        <div class="verdict-box">
+          <div class="big" id="auditorSummary"></div>
+          <div class="sub" id="auditorDetail"></div>
+        </div>
+        <div class="toggle-row" id="auditorToggleRow">
+          <span>Take apart before buying</span>
+          <button class="switch on" id="auditorEnabled" type="button" aria-label="Auditor enabled"></button>
+        </div>
+        <a class="fomo-btn" id="auditorFomo" href="#" target="_blank" rel="noopener">Open on FOMO</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coin overlay -->
+  <div class="overlay" id="coinScreen">
+    <div class="navbar">
+      <button class="back" id="coinBack">‹ Back</button>
+      <div class="nav-title" style="flex:0"></div>
+      <span class="paper-pill hidden" id="coinPaper">PAPER</span>
+    </div>
+    <div class="coin-head">
+      <div style="font-size:22px;font-weight:600" id="coinName">—</div>
+      <div class="coin-meta"><span id="coinMeta"></span><span class="shield" id="coinShield">n/a</span></div>
+      <div class="price-big num" id="coinPrice">—</div>
+      <div class="pct-entry" id="coinPct"></div>
+    </div>
+    <div class="chart-wrap" style="height:220px">
+      <canvas id="coinChart"></canvas>
+    </div>
+    <div class="stats-grid" id="coinStats"></div>
+    <div class="exit-card hidden" id="coinPosition"></div>
+    <a class="fomo-btn" id="coinFomo" href="#" target="_blank" rel="noopener">Buy on FOMO</a>
+  </div>
+
+  <div class="backdrop" id="backdrop"></div>
+  <div class="sheet" id="cmdSheet">
+    <div style="font-weight:600;font-size:17px">Use Telegram</div>
+    <div style="color:var(--secondary);font-size:13px;margin-top:4px">Plan B can’t write settings here. Send this command:</div>
+    <div class="cmd" id="cmdText"></div>
+    <div class="actions">
+      <a id="cmdOpenTg" href="https://t.me/Khaira_desk_bot" target="_blank" rel="noopener">Open bot</a>
+      <button type="button" id="cmdClose">Close</button>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script src="chart.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
