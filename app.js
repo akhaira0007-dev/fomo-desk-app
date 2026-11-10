@@ -263,7 +263,7 @@
 
   function renderActivityList(root, rows, compact) {
     if (!rows || !rows.length) {
-      root.innerHTML = `<div class="empty">${compact ? 'Nothing yet tonight' : 'Nothing yet tonight'}</div>`;
+      root.innerHTML = compact ? `<div class="empty">Nothing yet tonight</div>` : '';
       return;
     }
     root.innerHTML = rows.map(r => {
@@ -278,7 +278,9 @@
 
   function renderActivity() {
     const rows = (state.data.activity && state.data.activity.rows) || [];
-    $('activityEmpty').classList.toggle('hidden', rows.length > 0);
+    const empty = !rows.length;
+    $('activityEmpty').classList.toggle('hidden', !empty);
+    if (empty) { $('activityList').innerHTML = ''; return; }
     renderActivityList($('activityList'), rows, false);
   }
 
@@ -657,8 +659,8 @@
     if (tab && ['home','agents','activity','account'].includes(tab)) setTab(tab);
     const screen = params.get('screen');
     const mint = params.get('mint');
-    if (screen === 'coin' && mint) setTimeout(() => openCoin(mint), 1200);
-    if (screen === 'auditor' && mint) setTimeout(() => openAuditor(mint), 1200);
+    if (screen === 'coin' && mint) setTimeout(() => openCoin(mint), 2800);
+    if (screen === 'auditor' && mint) setTimeout(() => openAuditor(mint), 2800);
   }
 
   boot();
