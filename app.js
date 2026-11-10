@@ -201,7 +201,7 @@
     const dec = (state.data.decisions[name] || {}).decisions || [];
     if (name === 'scanner') {
       const n = dec.length;
-      return n ? `${n} pool${n === 1 ? '' : 's'}` : 'Listening';
+      return n ? `${n} pool${n === 1 ? '' : 's'}` : '';
     }
     if (name === 'auditor') {
       const info = (a && a.info) || '';
