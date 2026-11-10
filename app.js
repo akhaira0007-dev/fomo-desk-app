@@ -217,17 +217,23 @@
     return '';
   }
 
+  function agentCardWidth() {
+    return Math.max(1, document.documentElement.clientWidth - 32);
+  }
+
   function renderCarousel(agents) {
     const root = $('agentCarousel');
     const by = Object.fromEntries((agents || []).map(a => [a.name, a]));
-    const w = Math.max(1, window.innerWidth - 32);
-    const radius = 42 * w / 504;
+    const w = agentCardWidth();
+    root.style.setProperty('--agent-card-w', w + 'px');
     root.innerHTML = AGENT_ORDER.map(name => {
       const a = by[name] || { name, label: name, info: '', status: 'stopped', color: '#fff' };
       const count = cardMetrics(name, a);
-      return `<article class="agent-card" data-agent="${name}" style="width:${w}px;max-width:${w}px;border-radius:${radius}px">
-        <div class="ac-top"><div class="ac-name" style="color:${a.color || '#fff'}">${a.label || name}</div>
-        <div class="ac-count">${escapeHtml(count)}</div></div>
+      return `<article class="agent-card" data-agent="${name}">
+        <div class="ac-top">
+          <div class="ac-name" style="color:${a.color || '#fff'}">${a.label || name}</div>
+          <div class="ac-count">${escapeHtml(count)}</div>
+        </div>
         <div class="ac-body" id="card-${name}"></div></article>`;
     }).join('');
     fillScannerCard(by.scanner);
@@ -625,11 +631,14 @@
       else toast('Not found — try a mint');
     });
     window.addEventListener('resize', () => {
+      const root = $('agentCarousel');
+      if (root) root.style.setProperty('--agent-card-w', agentCardWidth() + 'px');
       drawHomeChart();
       if ($('scoreRing')) {
         const dec = (state.data.decisions.analyst || {}).decisions || [];
         DeskCharts.drawScoreRing($('scoreRing'), dec[0] && dec[0].score);
       }
+      if (state.data.state) renderCarousel(state.data.state.agents || []);
     });
   }
 
