@@ -10,17 +10,67 @@
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const AGENT_ORDER = ['scanner', 'auditor', 'analyst', 'executor', 'risk'];
-  const SETTINGS_GROUPS = {
-    Scanner: ['scan_min_liq_usd', 'scan_max_top10_pct', 'scan_max_h1_pct', 'scan_poll_s', 'scan_min_pool_age_min', 'scan_drop_after_min', 'runner_h24_pct'],
-    Auditor: ['aud_dev_max_pct', 'aud_top10_max_pct', 'aud_lp_min_pct', 'aud_min_pool_age_min', 'aud_bundle_max', 'aud_delegate_max', 'aud_retries'],
-    Analyst: ['gate_alive_min', 'gate_organic_min', 'gate_chase_max', 'gate_score_min', 'an_timeout_s', 'rules_vol_h1_usd', 'rules_buys_h1', 'rules_bundle_factor', 'rules_flush_m5_pct', 'rules_chase_h1_pct'],
-    Executor: ['size_pct', 'liq_cap_pct', 'min_size_usd', 'recheck_liq_drop_pct', 'recheck_price_up_pct', 'live_tap_timeout_min'],
-    Risk: ['risk_poll_s', 'stop_pct', 'trail_on_pct', 'trail_pct', 'timeout_h', 'timeout_min_gain_pct', 'live_sold_repush_min'],
-    Desk: ['paper_stack_usd', 'report_time', 'rpc_url'],
-  };
-  const SETTING_ALIAS = {
-    stop_pct: 'stop', trail_pct: 'trail', size_pct: 'stack_pct',
-    scan_min_liq_usd: 'min_liquidity', paper_stack_usd: 'stack',
+  const SETTINGS_GROUPS_FALLBACK = {
+    scanner: [
+      {key:'scanner.min_liquidity_usd', name:'min_liquidity_usd', alias:'min_liquidity_usd'},
+      {key:'scanner.max_top10_pct', name:'max_top10_pct', alias:'scanner.max_top10_pct'},
+      {key:'scanner.max_h1_change_pct', name:'max_h1_change_pct', alias:'max_h1_change_pct'},
+      {key:'scanner.poll_s', name:'poll_s', alias:'scanner.poll_s'},
+      {key:'scanner.min_pool_age_min', name:'min_pool_age_min', alias:'scanner.min_pool_age_min'},
+      {key:'scanner.max_wait_min', name:'max_wait_min', alias:'max_wait_min'},
+      {key:'scanner.runner_h24_pct', name:'runner_h24_pct', alias:'runner_h24_pct'},
+    ],
+    auditor: [
+      {key:'auditor.enabled', name:'enabled', alias:'auditor enabled'},
+      {key:'auditor.max_dev_pct', name:'max_dev_pct', alias:'max_dev_pct'},
+      {key:'auditor.max_top10_pct', name:'max_top10_pct', alias:'auditor.max_top10_pct'},
+      {key:'auditor.min_lp_locked_pct', name:'min_lp_locked_pct', alias:'min_lp_locked_pct'},
+      {key:'auditor.min_pool_age_min', name:'min_pool_age_min', alias:'auditor.min_pool_age_min'},
+      {key:'auditor.max_bundled', name:'max_bundled', alias:'max_bundled'},
+      {key:'auditor.max_delegated_accounts', name:'max_delegated_accounts', alias:'max_delegated_accounts'},
+      {key:'auditor.retries', name:'retries', alias:'retries'},
+    ],
+    analyst: [
+      {key:'analyst.mode', name:'mode', alias:'analyst.mode'},
+      {key:'analyst.min_alive_6h', name:'min_alive_6h', alias:'min_alive_6h'},
+      {key:'analyst.min_organic', name:'min_organic', alias:'min_organic'},
+      {key:'analyst.max_chase', name:'max_chase', alias:'max_chase'},
+      {key:'analyst.min_score', name:'min_score', alias:'min_score'},
+      {key:'analyst.timeout_s', name:'timeout_s', alias:'timeout_s'},
+      {key:'analyst.alive_volume_h1', name:'alive_volume_h1', alias:'alive_volume_h1'},
+      {key:'analyst.organic_buys_h1', name:'organic_buys_h1', alias:'organic_buys_h1'},
+      {key:'analyst.bundled_penalty', name:'bundled_penalty', alias:'bundled_penalty'},
+      {key:'analyst.flush_drop_m5_pct', name:'flush_drop_m5_pct', alias:'flush_drop_m5_pct'},
+      {key:'analyst.chase_h1_pct', name:'chase_h1_pct', alias:'chase_h1_pct'},
+    ],
+    executor: [
+      {key:'executor.stack_pct', name:'stack_pct', alias:'stack_pct'},
+      {key:'executor.max_pool_pct', name:'max_pool_pct', alias:'max_pool_pct'},
+      {key:'executor.min_ticket_usd', name:'min_ticket_usd', alias:'min_ticket_usd'},
+      {key:'executor.below_min', name:'below_min', alias:'below_min'},
+      {key:'executor.recheck_liq_drop_pct', name:'recheck_liq_drop_pct', alias:'recheck_liq_drop_pct'},
+      {key:'executor.recheck_price_up_pct', name:'recheck_price_up_pct', alias:'recheck_price_up_pct'},
+      {key:'executor.confirm_window_min', name:'confirm_window_min', alias:'executor.confirm_window_min'},
+    ],
+    risk: [
+      {key:'risk.poll_s', name:'poll_s', alias:'risk.poll_s'},
+      {key:'risk.stop_pct', name:'stop_pct', alias:'stop'},
+      {key:'risk.trail_start_pct', name:'trail_start_pct', alias:'trail_start'},
+      {key:'risk.trail_pct', name:'trail_pct', alias:'trail'},
+      {key:'risk.timeout_h', name:'timeout_h', alias:'timeout_h'},
+      {key:'risk.timeout_min_gain_pct', name:'timeout_min_gain_pct', alias:'timeout_min_gain_pct'},
+      {key:'risk.confirm_window_min', name:'confirm_window_min', alias:'risk.confirm_window_min'},
+    ],
+    desk: [
+      {key:'desk.mode', name:'mode', alias:'mode'},
+      {key:'desk.paper_start_stack', name:'paper_start_stack', alias:'paper_start_stack'},
+      {key:'desk.report_time', name:'report_time', alias:'report_time'},
+      {key:'desk.notifier', name:'notifier', alias:'notifier'},
+      {key:'desk.rpc_url', name:'rpc_url', alias:'rpc_url'},
+      {key:'desk.push_rejects', name:'push_rejects', alias:'push_rejects'},
+      {key:'desk.fees_ref_discount', name:'fees_ref_discount', alias:'fees_ref_discount'},
+      {key:'desk.fomo_handle', name:'fomo_handle', alias:'fomo_handle'},
+    ],
   };
 
   const state = {
@@ -282,8 +332,8 @@
     const el = $('card-risk'); if (!el) return;
     const s = (state.data.settings && state.data.settings.settings) || {};
     el.innerHTML = `<div>${escapeHtml((a && a.info) || 'Guarding')}</div>
-      <div class="pills"><span class="pill red">stop -${s.stop_pct != null ? s.stop_pct : 6}%</span>
-      <span class="pill green">trail ${s.trail_pct != null ? s.trail_pct : 12}%</span></div>`;
+      <div class="pills"><span class="pill red">stop -${s.stop_pct != null ? s.stop_pct : (s['risk.stop_pct'] != null ? s['risk.stop_pct'] : 6)}%</span>
+      <span class="pill green">trail ${s.trail_pct != null ? s.trail_pct : (s['risk.trail_pct'] != null ? s['risk.trail_pct'] : 12)}%</span></div>`;
   }
 
   function drawHomeChart() {
@@ -359,22 +409,35 @@
     $('profileHandle').textContent = '@' + (acc.fomo_handle || '—');
     if (acc.profile_url) $('profileRow').href = acc.profile_url;
     $('tgStatus').textContent = acc.telegram === 'connected' ? 'Connected' : 'Not connected';
-    // settings groups
+    // settings groups — prefer publisher STEP 10 groups (spec names)
     const root = $('settingsGroups');
-    root.innerHTML = Object.entries(SETTINGS_GROUPS).map(([group, keys]) => {
-      const rows = keys.filter(k => k in s).map(k => {
-        const v = s[k];
+    const published = state.data.settings && state.data.settings.groups;
+    const entries = published
+      ? Object.entries(published)
+      : Object.entries(SETTINGS_GROUPS_FALLBACK);
+    root.innerHTML = entries.map(([group, rows]) => {
+      const list = (rows || []).map(row => {
+        const key = row.key || row.name;
+        const name = row.name || key;
+        const alias = row.alias || name;
+        const v = row.value != null ? row.value : s[key];
+        if (v == null && v !== false && v !== 0) return '';
+        const lo = row.min != null ? row.min : 0;
+        const hi = row.max != null ? row.max : (typeof v === 'number' ? Math.max(v * 2, 100) : 100);
         if (typeof v === 'number') {
-          return `<div class="slider-row" data-key="${k}">
-            <div class="lab"><span>${k}</span><span class="mono">${v}</span></div>
-            <input type="range" disabled min="0" max="${Math.max(v * 2, 100)}" step="any" value="${v}">
+          return `<div class="slider-row" data-key="${escapeAttr(key)}" data-alias="${escapeAttr(alias)}">
+            <div class="lab"><span>${escapeHtml(name)}</span></div>
+            <input type="range" disabled min="${lo}" max="${hi}" step="any" value="${v}">
+            <input type="number" disabled class="exact" value="${v}">
           </div>`;
         }
-        return `<div class="field-row" data-key="${k}"><span>${k}</span>
+        return `<div class="field-row" data-key="${escapeAttr(key)}" data-alias="${escapeAttr(alias)}">
+          <span>${escapeHtml(name)}</span>
           <input type="text" disabled value="${escapeAttr(String(v))}"></div>`;
       }).join('');
-      return `<div class="settings-group" id="settings-${group.toLowerCase()}"><h3>${group}</h3>
-        <div class="card-block">${rows}</div></div>`;
+      const label = group.charAt(0).toUpperCase() + group.slice(1);
+      return `<div class="settings-group" id="settings-${group.toLowerCase()}"><h3>${escapeHtml(label)}</h3>
+        <div class="card-block">${list}</div></div>`;
     }).join('');
   }
 
@@ -614,10 +677,19 @@
       const row = e.target.closest('[data-key]');
       if (!row) return;
       const key = row.dataset.key;
-      const alias = SETTING_ALIAS[key] || key;
+      const alias = row.dataset.alias || key;
+      const groups = (state.data.settings && state.data.settings.groups) || {};
+      let val;
+      Object.values(groups).forEach(rows => (rows || []).forEach(r => {
+        if (r.key === key) val = r.value;
+      }));
       const s = (state.data.settings && state.data.settings.settings) || {};
-      if (key === 'stop_pct') showCmd(`set stop to -${s[key]}%`);
-      else showCmd(`set ${alias} to ${s[key]}`);
+      if (val == null) val = s[key];
+      if (alias === 'stop' || key === 'risk.stop_pct' || key === 'stop_pct') {
+        showCmd(`set stop to -${val}%`);
+      } else {
+        showCmd(`set ${alias} to ${val}`);
+      }
     });
     $('btnSearch').addEventListener('click', () => {
       const q = prompt('Search name, symbol or mint');
